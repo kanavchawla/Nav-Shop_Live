@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<head>
+    <title>Basic Kiosk Solution Example</title>
+    <meta name="viewport" id="vp" content="initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width" />
+    <meta charset="utf-8" />
+
+    <link rel="stylesheet" href="https://api.mazemap.com/js/v2.0.94/mazemap.min.css">
+    <script type='text/javascript' src='https://api.mazemap.com/js/v2.0.94/mazemap.min.js'></script>
+
+    <script type='text/javascript' src='screenfull.min.js'></script>
+
+    <style>
+        /* Some basic page styling */
+        html, body { position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px; margin:0px; padding:0px; font-family: "Helvetica Neue",Helvetica,Arial,sans-serif; font-size: 12px; }
+
+        /* Some custom styling overrides */
+
+            /* bigger zoom-buttons */
+            .mapboxgl-ctrl-group > button{
+                width: 60px;
+                height: 60px;
+            }
+
+            /* custom size and color of the floor selector */
+            .mazemap-control-zlevel-bar.custom-zlevel-bar{
+                background: rgb(255, 255, 255);
+                border-radius: 8px;
+                box-shadow: 0px 0px 0px 1px #5d5d5d;
+                width: 60px;
+                margin-right: 20px;
+            }
+
+            .mazemap-control-zlevel-bar.custom-zlevel-bar button{
+                width: 100%;
+                height: 60px;
+                padding: 10px;
+                color: black;
+                font-size: 2em;
+                font-weight: bold;
+            }
+            .mazemap-control-zlevel-bar .z-scroll.scroll-down{
+                border-bottom-right-radius: 10px;
+                border-bottom-left-radius: 10px;
+            }
+
+
+            /* Styling the search control bigger */
+            .search-control-default{
+                position: absolute;
+                margin-left: calc( (100% - 20px)*(-1/2) );
+                top: 10px;
+                width: calc(100% - 20px);
+                left: 50%;
+                max-width: 500px;
+                z-index: 999;
+            }
+
+            .search-input{
+                font-size: 2em;
+                height: 80px;
+                border-radius: 8px;
+                border: 4px solid rgb(48, 152, 253);
+            }
+
+            .search-suggestions.default{
+                font-size: 2em;
+                max-height: calc(100vh - 130px);
+            }
+
+            ul.search-suggestions-list.default .item{
+                padding: 25px 15px;
+            }
+
+
+            /* Custom you-are-here marker styling */
+            .you-are-here-marker {
+                display: block;
+                border: none;
+                border-radius: 50%;
+                cursor: pointer;
+                padding: 0;
+                background: none;
+                width: 100px;
+                height: 111px;
+
+            }
+
+            /* custom gui elements for this example only */
+            .bottom-buttons{
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                bottom: 10px;
+                display: flex;
+            }
+
+            .btn{
+                background-color: white;
+                box-shadow: 0px 0px 3px 0px black;
+                padding: 10px 10px;
+                border-radius: 4px;
+                text-transform: uppercase;
+                font-weight: bold;
+                cursor: pointer;
+                margin: 0px 10px;
+            }
+
+    </style>
+</head>
+<body>
+    <div id="map" aria-label="map view" tabindex="1" class="mazemap"></div>
+    <div class="bottom-buttons">
+        <div onclick="screenfull.toggle();" class="btn" id="fullscreen-btn" style="display: none;">Toggle fullscreen</div>
+        <div onclick="resetMap()" class="btn" id="reset-btn">Reset</div>
+    </div>
+    <div id="search-input-container" style="display: none;" class='search-control-default'>
+        <input tabindex="0" id="searchInput" class="search-input" autocomplete="off" type="text" name='search' placeholder='Search'>
+
+        <div id="suggestions" class="search-suggestions default"></div>
+    </div>
+
+    <script>
+
+        var youAreHereDotConfig = {
+            center: {lng: 151.77136275392934, lat: -32.92746324645514},
+            markerOptions: {
+                offZOpacity: 0.2,
+                zLevel: 1,
+                offset: [0,-29]
+            },
+            bearing: -51.95753181875392,
+            pitch: 48.49,
+            zoom: 20.8,
+            zLevel: 1
+        };
+
+        // Just the same way to initialize as always...
+        var myMap = new Mazemap.Map({
+            container: 'map',
+            campuses: 128,
+            center: youAreHereDotConfig.center,
+            zoom: youAreHereDotConfig.zoom,
+            zLevel: youAreHereDotConfig.zLevel,
+            pitch: youAreHereDotConfig.pitch,
+            bearing: youAreHereDotConfig.bearing,
+            zLevelControl: false,
+            scrollZoom: true,
+            doubleClickZoom: true,
+            touchZoomRotate: true,
+            minZoom: 19
+        });
+
+        myMap.on('click', onMapClick);
+
+        function onMapClick(e){
+
+            // un-highlight any already highlighted rooms
+            placePoiMarker(null);
+            mySearchInput.clearSearch();
+
+            var lngLat = e.lngLat;
+            var zLevel = myMap.zLevel;
+
+            // Fetching via Data API
+            // NB: Adding optional campusId parameter, makes lookup much faster, but can be omitted
+            Mazemap.Data.getPoiAt(lngLat, zLevel).then( poi => {
+                // Run custom highlight function
+                placePoiMarker(poi);
+
+            }).catch( function(){ return false; } );
+        }
+
+        myMap.on('load', function(){
+
+            // Add zoom and rotation controls to the map.
+            myMap.addControl(new Mazemap.mapboxgl.NavigationControl(), 'bottom-left');
+
+            var floorBar = new Mazemap.ZLevelBarControl( {
+                className: 'custom-zlevel-bar',
+
+                maxHeight: 300,
+                buttonHeight: 60,
+                autoUpdate: true,
+                zLevels: { '1': '1st Floor', '2': '2nd Floor' }
+            } );
+            myMap.addControl( floorBar, 'middle-right' );
+
+
+            function onResize(){
+                var height = myMap.getCanvas().clientHeight;
+                var maxHeight = height - 50; // 50 pixels account for margins and spacing
+                floorBar.setMaxHeight(maxHeight);
+            };
+            myMap.on('resize', onResize);
+
+            onResize();
+
+            initSearch();
+
+            // create a DOM element for the marker
+            var el = document.createElement('img');
+            el.className = 'you-are-here-marker';
+            el.src = 'you-are-here-man.svg'
+
+            new Mazemap.ZLevelMarker(el, youAreHereDotConfig.markerOptions).setLngLat(youAreHereDotConfig.center).addTo(myMap).on('click', function(){
+                myMap.flyTo(youAreHereDotConfig);
+            });
+
+
+            // Initialize a Highlighter for POIs
+            // Storing the object on the map just makes it easy to access for other things
+            myMap.highlighter = new Mazemap.Highlighter( myMap, {
+                showOutline: true, // optional
+                showFill: true, // optional
+                outlineColor: Mazemap.Util.Colors.MazeColors.MazeBlue, // optional
+                fillColor: Mazemap.Util.Colors.MazeColors.MazeBlue  // optional
+            } );
+            //new Mazemap.ZLevelMarker( youAreHereDotConfig.markerOptions ).setLngLat( youAreHereDotConfig.lngLat ).addTo(myMap);
+
+        });
+
+        function highlightRoom(poi){
+            // If the POI has a polygon, use the default 'highlight' function to draw a marked outline around the POI.
+            var poiId = poi && (poi.properties.poiId || poi.properties.id);
+
+            if(poiId){
+                Mazemap.Data.getPoi(poiId).then(function(poi){
+                    if(poi.geometry.type === "Polygon"){
+                        myMap.highlighter.highlight(poi);
+                    }
+                })
+            }else if(poi === null){
+                myMap.highlighter.clear();
+            }
+        }
+
+        function placePoiMarker(poi){
+
+            if(!poi){
+                highlightRoom(null);
+                setRoute(null);
+
+                return;
+            }
+            // Get a center point for the POI, because the data can return a polygon instead of just a point sometimes
+            var lngLat = Mazemap.Util.getPoiLngLat(poi);
+            var zLevel = poi.properties.zValue || poi.properties.zLevel;
+
+            if(resultMarker){
+                resultMarker.remove();
+            }
+
+            resultMarker
+            .setLngLat(lngLat)
+            .setZLevel(zLevel)
+            .addTo(myMap);
+
+            myMap.zLevel = zLevel;
+
+            highlightRoom(poi);
+
+            var start = {lngLat: youAreHereDotConfig.center, zLevel: youAreHereDotConfig.zLevel};
+            var dest = {lngLat: lngLat, zLevel: zLevel};
+            setRoute(start, dest);
+
+            //myMap.flyTo({center: lngLat, zoom: 19, duration: 2000});
+        }
+
+
+        if (screenfull.enabled) {
+            document.getElementById("fullscreen-btn").style.display = "block";
+        }
+
+        function setRoute( start, dest ){
+            if(start === null){
+                myMap.route.clear();
+                return;
+            }
+            Mazemap.Data.getRouteJSON(start, dest)
+            .then(function(geojson){
+                myMap.route.setPath(geojson);
+                console.log('@ geojson', geojson);
+                var bounds = Mazemap.Util.Turf.bbox(geojson);
+                myMap.fitBoundsRotated( bounds, {padding: 100} );
+            });
+        }
+
+        function resetMap(){
+            location.reload()
+        };
+
+        function initSearch(){
+
+
+            var mySearch = new Mazemap.Search.SearchController({
+                campusid: 128,
+
+                rows: 30,
+
+                withpois: true,
+                withbuilding: false,
+                withtype: false,
+                withcampus: false,
+
+                resultsFormat: 'geojson'
+            });
+
+            window.mySearchInput = new Mazemap.Search.SearchInput({
+                container: document.getElementById('search-input-container'),
+                input: document.getElementById('searchInput'),
+                suggestions: document.getElementById('suggestions'),
+                searchController: mySearch
+            });
+            window.mySearchInput.on('itemclick', function(e){
+                var poiFeature = e.item;
+                placePoiMarker( poiFeature );
+            });
+
+            myMap.getCanvas().addEventListener('focus', function(){
+                mySearchInput.hideSuggestions();
+            });
+
+
+            window.resultMarker = new Mazemap.MazeMarker({
+                color: 'rgb(253, 117, 38)',
+                innerCircle: true,
+                innerCircleColor: '#FFF',
+                size: 34,
+                innerCircleScale: 0.5,
+                zLevel: 1
+            })
+
+            document.getElementById('search-input-container').style.display = '';
+        }
+
+    </script>
+</body>

@@ -1,0 +1,30 @@
+.navbar-nav li {
+    list-style-type: none !important;
+    padding: 0!important;
+    display: flex!important;
+    flex-direction: row!important;
+    justify-content: space-around!important;
+    flex-wrap: nowrap!important;
+    color: aliceblue!important;
+}
+
+.navbar .navbar-brand{
+    color: white;
+    font-weight: bolder;
+    font-size: 1em;
+}
+
+.navbar .navbar-nav{
+    margin:  auto;
+    font-size: 1.25em;
+    color: white !important;
+    /* padding: 100; */
+}
+
+.navbar .nav-item {
+    color: white !important;
+    font-weight: 200;
+}
+
+
+

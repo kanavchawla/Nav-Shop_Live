@@ -1,0 +1,47 @@
+.badge {
+    padding-left: 9px;
+    padding-right: 9px;
+    -webkit-border-radius: 9px;
+    -moz-border-radius: 9px;
+    border-radius: 9px;
+  }
+  
+  .label-warning[href],
+  .badge-warning[href] {
+    background-color: #c67605;
+  }
+  #lblCartCount {
+      font-size: 12px;
+      background: #ff0000;
+      color: #fff;
+      padding: 0 5px;
+      vertical-align: top;
+      margin-left: -10px; 
+  }
+  .cartbg{
+      background-image: url('../images/bg.jpg');
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      height: auto;
+      /* overflow-x: hidden; */
+
+    }
+.pay-btn{
+  /* padding: 20px; */
+  margin-bottom: 10px;
+}
+  
+.AR-button{
+  border: solid 3px;
+  border-radius: 10px;
+  margin: 10px;
+}
+.AR-button:hover {
+  border: none;
+  border-bottom: 5px solid;
+  background-color: aquamarine;
+}

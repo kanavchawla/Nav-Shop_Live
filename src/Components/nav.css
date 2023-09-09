@@ -1,0 +1,101 @@
+html,
+body {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  margin: 0px;
+  padding: 0px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+}
+
+/* Some custom styling overrides */
+
+/* bigger zoom-buttons */
+.mapboxgl-ctrl-group > button {
+  width: 60px;
+  height: 60px;
+}
+
+/* custom size and color of the floor selector */
+.mazemap-control-zlevel-bar.custom-zlevel-bar {
+  background: rgb(255, 255, 255);
+  border-radius: 8px;
+  box-shadow: 0px 0px 0px 1px #5d5d5d;
+  width: 60px;
+  margin-right: 20px;
+}
+
+.mazemap-control-zlevel-bar.custom-zlevel-bar button {
+  width: 100%;
+  height: 60px;
+  padding: 10px;
+  color: black;
+  font-size: 2em;
+  font-weight: bold;
+}
+.mazemap-control-zlevel-bar .z-scroll.scroll-down {
+  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+/* Styling the search control bigger */
+.search-control-default {
+  position: absolute;
+  margin-left: calc((100% - 20px) * (-1 / 2));
+  top: 10px;
+  width: calc(100% - 20px);
+  left: 50%;
+  max-width: 500px;
+  z-index: 999;
+}
+
+.search-input {
+  font-size: 2em;
+  height: 80px;
+  border-radius: 8px;
+  border: 4px solid rgb(48, 152, 253);
+}
+
+.search-suggestions.default {
+  font-size: 2em;
+  max-height: calc(100vh - 130px);
+}
+
+ul.search-suggestions-list.default .item {
+  padding: 25px 15px;
+}
+
+/* Custom you-are-here marker styling */
+.you-are-here-marker {
+  display: block;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  background: none;
+  width: 100px;
+  height: 111px;
+}
+
+/* custom gui elements for this example only */
+.bottom-buttons {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 10px;
+  display: flex;
+}
+
+.btn {
+  background-color: white;
+  box-shadow: 0px 0px 3px 0px black;
+  padding: 10px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 0px 10px;
+}
